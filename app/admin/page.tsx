@@ -6,12 +6,14 @@ import { siteConfig } from "@/site.config";
 import { isAdmin, isAdminPasswordSet } from "@/lib/admin-auth";
 import { getAdminClient } from "@/lib/supabase-admin";
 import type { Item } from "@/lib/types";
+import { getHeroText, heroFields } from "@/lib/data";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { logout } from "./actions";
 import { LoginForm } from "./_components/login-form";
 import { ItemForm } from "./_components/item-form";
 import { DeleteButton } from "./_components/delete-button";
+import { HeroForm } from "./_components/hero-form";
 
 /* 관리자 페이지 (주소: /admin)
    1) 비밀번호가 설정 안 됐으면 → 설정 안내
@@ -75,15 +77,19 @@ export default async function AdminPage(props: PageProps<"/admin">) {
 
   const sections = siteConfig.adminSections;
   const requested = typeof searchParams.section === "string" ? searchParams.section : undefined;
+  const showHero = requested === "hero";
   const current = sections.find((s) => s.key === requested) ?? sections[0];
 
-  const { data, error } = await supabase
-    .from("items")
-    .select("*")
-    .eq("section", current.key)
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: true });
+  const { data, error } = showHero
+    ? { data: null, error: null }
+    : await supabase
+        .from("items")
+        .select("*")
+        .eq("section", current.key)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
   const items = (data ?? []) as Item[];
+  const heroText = showHero ? await getHeroText() : null;
 
   return (
     <Container className="py-10">
@@ -106,68 +112,90 @@ export default async function AdminPage(props: PageProps<"/admin">) {
 
       {/* 섹션 탭 (site.config.ts 의 adminSections) */}
       <nav className="mt-8 flex flex-wrap gap-2">
+        <Button asChild size="sm" variant={showHero ? "default" : "outline"}>
+          <Link href="/admin?section=hero">히어로 문구</Link>
+        </Button>
         {sections.map((s) => (
-          <Button key={s.key} asChild size="sm" variant={s.key === current.key ? "default" : "outline"}>
+          <Button
+            key={s.key}
+            asChild
+            size="sm"
+            variant={!showHero && s.key === current.key ? "default" : "outline"}
+          >
             <Link href={`/admin?section=${s.key}`}>{s.label}</Link>
           </Button>
         ))}
       </nav>
 
-      {error ? (
-        <p className="mt-6 rounded-lg border border-destructive/40 p-4 text-sm text-destructive">
-          데이터를 불러오지 못했습니다: {error.message}
-          <br />
-          supabase/schema.sql 을 Supabase SQL Editor 에서 실행했는지 확인하세요.
-        </p>
+      {heroText ? (
+        <section className="mt-8 max-w-2xl rounded-xl border p-6">
+          <h2 className="text-lg font-semibold">히어로 문구</h2>
+          <p className="mb-5 mt-1 text-sm text-muted-foreground">
+            사이트 첫 화면에 보이는 글자입니다. 고친 뒤 저장하면 바로 반영됩니다.
+          </p>
+          <HeroForm fields={heroFields} values={heroText} />
+        </section>
       ) : null}
 
-      <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-        {/* 새 항목 추가 */}
-        <section className="h-fit rounded-xl border p-6">
-          <h2 className="mb-5 text-lg font-semibold">{current.label} 추가</h2>
-          <ItemForm section={current.key} />
-        </section>
+      {showHero ? null : (
+        <>
+          {error ? (
+            <p className="mt-6 rounded-lg border border-destructive/40 p-4 text-sm text-destructive">
+              데이터를 불러오지 못했습니다: {error.message}
+              <br />
+              supabase/schema.sql 을 Supabase SQL Editor 에서 실행했는지 확인하세요.
+            </p>
+          ) : null}
 
-        {/* 등록된 항목 목록 */}
-        <section>
-          <h2 className="mb-5 text-lg font-semibold">
-            등록된 {current.label} <span className="text-muted-foreground">({items.length})</span>
-          </h2>
-          {items.length === 0 ? (
-            <p className="text-sm text-muted-foreground">아직 없습니다. 왼쪽에서 추가해 보세요.</p>
-          ) : (
-            <ul className="space-y-3">
-              {items.map((item) => (
-                <li key={item.id} className="rounded-xl border">
-                  <div className="flex items-center gap-4 p-4">
-                    <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-muted">
-                      {item.image_url ? (
-                        <Image src={item.image_url} alt="" fill sizes="56px" className="object-cover" />
-                      ) : null}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="flex items-center gap-2 font-medium">
-                        <span className="truncate">{item.title}</span>
-                        {!item.is_visible ? (
-                          <EyeOff className="size-4 shrink-0 text-muted-foreground" aria-label="숨김" />
-                        ) : null}
-                      </p>
-                      <p className="text-xs text-muted-foreground">순서 {item.sort_order}</p>
-                    </div>
-                    <DeleteButton id={item.id} imageUrl={item.image_url} />
-                  </div>
-                  <details className="border-t px-4 py-3">
-                    <summary className="cursor-pointer text-sm text-muted-foreground">수정하기</summary>
-                    <div className="pt-4">
-                      <ItemForm section={current.key} item={item} />
-                    </div>
-                  </details>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      </div>
+          <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+            {/* 새 항목 추가 */}
+            <section className="h-fit rounded-xl border p-6">
+              <h2 className="mb-5 text-lg font-semibold">{current.label} 추가</h2>
+              <ItemForm section={current.key} />
+            </section>
+
+            {/* 등록된 항목 목록 */}
+            <section>
+              <h2 className="mb-5 text-lg font-semibold">
+                등록된 {current.label} <span className="text-muted-foreground">({items.length})</span>
+              </h2>
+              {items.length === 0 ? (
+                <p className="text-sm text-muted-foreground">아직 없습니다. 왼쪽에서 추가해 보세요.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {items.map((item) => (
+                    <li key={item.id} className="rounded-xl border">
+                      <div className="flex items-center gap-4 p-4">
+                        <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-muted">
+                          {item.image_url ? (
+                            <Image src={item.image_url} alt="" fill sizes="56px" className="object-cover" />
+                          ) : null}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="flex items-center gap-2 font-medium">
+                            <span className="truncate">{item.title}</span>
+                            {!item.is_visible ? (
+                              <EyeOff className="size-4 shrink-0 text-muted-foreground" aria-label="숨김" />
+                            ) : null}
+                          </p>
+                          <p className="text-xs text-muted-foreground">순서 {item.sort_order}</p>
+                        </div>
+                        <DeleteButton id={item.id} imageUrl={item.image_url} />
+                      </div>
+                      <details className="border-t px-4 py-3">
+                        <summary className="cursor-pointer text-sm text-muted-foreground">수정하기</summary>
+                        <div className="pt-4">
+                          <ItemForm section={current.key} item={item} />
+                        </div>
+                      </details>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </div>
+        </>
+      )}
     </Container>
   );
 }

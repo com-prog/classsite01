@@ -44,3 +44,21 @@ select * from (values
   ('features', '세 번째 기능', '필요 없으면 삭제하면 됩니다.', 3)
 ) as v(section, title, description, sort_order)
 where not exists (select 1 from public.items);
+
+-- 5) 사이트 문구(히어로 제목 등)를 저장하는 표
+--    - key 예시: 'hero.title' / value: 실제 문구
+--    - 비어 있으면 site.config.ts 의 문구가 그대로 보임
+create table if not exists public.site_content (
+  key        text primary key,
+  value      text not null,
+  updated_at timestamptz not null default now()
+);
+
+--    - 방문자: 읽기만 가능 / 수정: 서버의 비밀 키(SECRET KEY)로만 가능
+alter table public.site_content enable row level security;
+
+drop policy if exists "Anyone can read site content" on public.site_content;
+create policy "Anyone can read site content"
+  on public.site_content for select
+  to anon, authenticated
+  using (true);
