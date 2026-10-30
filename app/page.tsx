@@ -19,8 +19,8 @@ export default function HomePage() {
       <Navbar />
       <main className="flex-1">
         <Hero />
-        <About />
         <Features />
+        <About />
         <Contact />
       </main>
       <Footer />

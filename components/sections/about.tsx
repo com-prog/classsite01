@@ -2,23 +2,28 @@ import { siteConfig } from "@/site.config";
 import { Container } from "@/components/layout/container";
 import { SectionHeader } from "@/components/layout/section-header";
 
-/** 소개 섹션. 글자는 site.config.ts 의 about 에서 바꿉니다. */
+/** 이용 방법 섹션 (벤토 카드). 글자는 site.config.ts 의 about 에서 바꿉니다.
+    paragraphs 의 문장 하나가 번호 카드 하나가 됩니다. */
 export function About() {
   const { about } = siteConfig;
 
   return (
-    <section id="about" className="scroll-mt-16 bg-muted/50 py-24">
-      <Container className="grid gap-12 md:grid-cols-2 md:items-center">
-        <div>
+    <section id="about" className="scroll-mt-16 pb-24">
+      <Container className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+        <div className="flex flex-col justify-center rounded-3xl bg-secondary p-7 md:col-span-2 lg:col-span-1 lg:row-span-1">
           <SectionHeader eyebrow={about.eyebrow} title={about.title} />
-          <div className="mt-6 space-y-4 text-base leading-relaxed text-muted-foreground">
-            {about.paragraphs.map((text, i) => (
-              <p key={i}>{text}</p>
-            ))}
-          </div>
         </div>
-        {/* 이미지 자리: public 폴더에 사진을 넣고 <img src="/사진이름.jpg" /> 로 바꿔 보세요 */}
-        <div className="aspect-[4/3] w-full rounded-xl border bg-background" />
+        {about.paragraphs.map((text, i) => (
+          <div
+            key={i}
+            className="flex flex-col gap-5 rounded-3xl border border-primary/20 bg-card p-7 shadow-[0_10px_30px_-12px] shadow-primary/20"
+          >
+            <span className="flex size-11 items-center justify-center rounded-2xl bg-highlight font-display text-lg font-bold text-highlight-foreground shadow-lg shadow-highlight/30">
+              {i + 1}
+            </span>
+            <p className="text-base leading-relaxed text-muted-foreground">{text}</p>
+          </div>
+        ))}
       </Container>
     </section>
   );
