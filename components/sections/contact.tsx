@@ -12,7 +12,7 @@ export function Contact() {
   return (
     <section id="contact" className="scroll-mt-16 pb-24">
       <Container>
-        <div className="bg-hero relative overflow-hidden rounded-3xl border border-primary/20 px-6 py-16 text-center text-hero-foreground sm:px-12">
+        <div className="bg-hero relative overflow-hidden rounded-2xl border border-card px-6 py-16 text-center text-hero-foreground sm:px-12">
           <div
             aria-hidden
             className="bg-dots absolute inset-0 [mask-image:radial-gradient(circle_at_center,black,transparent_75%)]"

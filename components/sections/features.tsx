@@ -63,7 +63,7 @@ export async function Features() {
               const card = (
                 <article
                   className={cn(
-                    "group relative flex h-full overflow-hidden rounded-3xl border border-primary/20 bg-card p-6 shadow-[0_10px_30px_-12px] shadow-primary/25 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-12px] hover:shadow-primary/35 sm:p-7",
+                    "group relative flex h-full overflow-hidden glass rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-12px] hover:shadow-primary/35 sm:p-7",
                     isWide ? "flex-col sm:flex-row sm:items-center sm:gap-6" : "flex-col"
                   )}
                 >
@@ -97,7 +97,7 @@ export async function Features() {
                         alt={item.title}
                         fill
                         sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="object-contain p-2 transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center">
@@ -105,7 +105,7 @@ export async function Features() {
                         <Icon
                           strokeWidth={1.6}
                           className={cn(
-                            "relative text-foreground/75 drop-shadow-lg drop-shadow-card/60 transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-110",
+                            "relative text-primary drop-shadow-lg drop-shadow-card/60 transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-110",
                             isTall ? "size-24" : "size-16"
                           )}
                         />
